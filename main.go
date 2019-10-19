@@ -1,12 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
+	"golang.org/x/image/font/basicfont"
 )
 
 var blocks [6][7]Block
@@ -18,19 +22,21 @@ var player1, player2 Player
 var turnOf *Player
 var pawnSheet pixel.Picture
 var objects *pixel.Batch
+var win *pixelgl.Window
 
-var blockM = pixel.IM.Scaled(pixel.ZV, .9)
+var winTitle = "Four-In-A-Row!"
+var heading, subheading string
+var basicAtlas = text.NewAtlas(basicfont.Face7x13, text.ASCII)
+
+var blockM = pixel.IM.Scaled(pixel.ZV, .8)
 
 func run() {
 	cfg := pixelgl.WindowConfig{
-		Title:  "Four-In-A-Row!",
+		Title:  winTitle,
 		Bounds: pixel.R(0, 0, 700, 700),
 		VSync:  true,
 	}
-	win, err := pixelgl.NewWindow(cfg)
-	if err != nil {
-		panic(err)
-	}
+	win, _ = pixelgl.NewWindow(cfg)
 
 	initGame()
 	background := makeBackground()
@@ -49,30 +55,37 @@ func run() {
 		switch state {
 		case waitingToDrop:
 			turnOf.pawn.Draw(win, blockM.Moved(pixel.V(mouseX, 650)))
+			subheading = turnOf.name + "'s move..."
 		case pawnDropped:
 			droppingV.Y -= 20
 			if droppingV.Y <= dropTarget.Center().Y {
 				// Reached target cell. draw permenently
 				dropComplete()
-				checkMatching(*dropTarget)
+				matched, from, to := checkMatching(*dropTarget)
+				if matched {
+					declareWin(currentScene, from, to)
+				} else {
+					turnOf = rotateTurn()
+				}
 			} else {
 				droppingPawn.Draw(win, blockM.Moved(droppingV))
 			}
 		}
 
-		if win.JustPressed(pixelgl.MouseButtonLeft) {
-			if state == waitingToDrop {
-				dropCol := getDroppingCol(mouseX)
-				dropTarget = findGropTarget(dropCol)
+		if win.JustPressed(pixelgl.MouseButtonLeft) && state == waitingToDrop {
+			dropCol := getDroppingCol(mouseX)
+			dropTarget = findGropTarget(dropCol)
 
-				if dropTarget != nil {
-					playMove(dropCol, win)
-				} else {
-					alert("No block is left in this column!")
-				}
+			if dropTarget != nil {
+				playMove(dropCol, win)
+			} else {
+				alert("No block is left in this column!")
 			}
+		} else if win.JustPressed(pixelgl.KeySpace) && state == checkMate {
+			restartGame(currentScene)
 		}
 
+		printTitles()
 		win.Update()
 	}
 }
@@ -80,7 +93,7 @@ func run() {
 func makeGameScene() Scene {
 
 	stage := Scene{imdraw.New(nil)}
-
+	stage.canvas.Color = pixel.ToRGBA(colornames.Coral).Mul(pixel.Alpha(.5))
 	for row := 0; row < 6; row++ {
 		for col := 0; col < 7; col++ {
 			//fmt.Printf("Making Block row: %d col: %d \n", row, col)
@@ -100,8 +113,27 @@ func initGame() {
 	//sprite := pixel.NewSprite(pic, pic.Bounds())
 	//button2 := pixel.NewSprite(pic, pixel.R(0, 127, 100, 227))
 	buttonFrames := makeSpriteMap(pawnSheet, 100, 100)
-	player1 = Player{"Ayan", pixel.NewSprite(pawnSheet, buttonFrames[0])}
-	player2 = Player{"Anas", pixel.NewSprite(pawnSheet, buttonFrames[1])}
+	player1 = Player{"Player 1", colornames.Whitesmoke, pixel.NewSprite(pawnSheet, buttonFrames[0])}
+	player2 = Player{"Player 2", colornames.Darkorchid, pixel.NewSprite(pawnSheet, buttonFrames[1])}
+}
+
+func restartGame(s Scene) {
+	objects.Clear()
+	s.canvas.Clear()
+	heading = ""
+	subheading = ""
+
+	s.canvas.Color = pixel.ToRGBA(colornames.Coral).Mul(pixel.Alpha(.5))
+	for row := 0; row < 6; row++ {
+		for col := 0; col < 7; col++ {
+			//fmt.Printf("Making Block row: %d col: %d \n", row, col)
+			blocks[row][col].capturedBy = nil
+			blocks[row][col].print(s)
+		}
+	}
+
+	turnOf = rotateTurn()
+	state = waitingToDrop
 }
 
 func getMouseXInBound(win *pixelgl.Window, min, max float64) float64 {
@@ -128,7 +160,6 @@ func playMove(dropCol int, win pixel.Target) {
 func dropComplete() {
 	droppingPawn.Draw(objects, blockM.Moved(dropTarget.Center()))
 	dropTarget.capturedBy = turnOf
-	turnOf = rotateTurn()
 	state = waitingToDrop
 }
 
@@ -155,8 +186,35 @@ func rotateTurn() *Player {
 	return &player1
 }
 
+func printTitles() {
+
+	if heading != "" {
+		message := text.New(pixel.V(100, 650), basicAtlas)
+		fmt.Fprintln(message, heading)
+		message.Draw(win, pixel.IM.Scaled(message.Orig, 4))
+	}
+
+	if subheading != "" {
+		message := text.New(pixel.V(100, 620), basicAtlas)
+		fmt.Fprintln(message, subheading)
+		message.Draw(win, pixel.IM.Scaled(message.Orig, 2))
+	}
+}
+
+func declareWin(s Scene, from, to Block) {
+	s.canvas.Color = turnOf.color
+	s.canvas.Push(from.Center(), to.Center())
+	s.canvas.Line(5)
+	state = checkMate
+
+	heading = turnOf.name + " Wins!"
+	subheading = "Press <SPACE> to start over"
+}
+
 func alert(message string) {
-	println(message)
+	// println(message)
+	win.SetTitle(fmt.Sprintf("!!! %s !!!", message))
+	time.AfterFunc(time.Second*4, func() { win.SetTitle(winTitle) })
 }
 
 func main() {
@@ -164,46 +222,46 @@ func main() {
 }
 
 //  ------------- CHeck Matching --------------
-func checkMatching(block Block) {
+func checkMatching(block Block) (bool, Block, Block) {
+	from, to := Block{}, Block{}
+
+	var getLastBlock = func(block Block, direction string) Block {
+
+		directionStr := "|" + direction + "|"
+		for {
+			row, col := block.row, block.col
+
+			if strings.Contains("|right|top-right|bottom-right|", directionStr) {
+				col++
+			}
+			if strings.Contains("|left|top-left|bottom-left|", directionStr) {
+				col--
+			}
+			if strings.Contains("|top|top-right|top-left|", directionStr) {
+				row++
+			}
+			if strings.Contains("|bottom|bottom-left|bottom-right|", directionStr) {
+				row--
+			}
+
+			if row > 6 || row < 1 || col > 7 || col < 1 || blockByRowCol(row, col).capturedBy != block.capturedBy {
+				// Keep note of last 2 results by this closure
+				// Also, remember to call this 2 times (from-to) for every checking
+				from, to = to, block
+				return block
+			}
+
+			block = blockByRowCol(row, col)
+		}
+	}
 
 	switch {
 	case getLastBlock(block, "right").col-getLastBlock(block, "left").col >= 3,
 		getLastBlock(block, "top").row-getLastBlock(block, "bottom").row >= 3,
 		getLastBlock(block, "top-right").col-getLastBlock(block, "bottom-left").col >= 3,
 		getLastBlock(block, "bottom-right").col-getLastBlock(block, "top-left").col >= 3:
-		alert("Yes!")
+		return true, from, to
 	}
-}
 
-func getLastBlock(block Block, direction string) Block {
-	directionStr := "|" + direction + "|"
-
-	for {
-		row, col := block.row, block.col
-
-		if strings.Contains("|right|top-right|bottom-right|", directionStr) {
-			col++
-			// fmt.Println(directionStr + " Matched |right|top-right|bottom-right|")
-		}
-		if strings.Contains("|left|top-left|bottom-left|", directionStr) {
-			col--
-			// fmt.Println(directionStr + " Matched |left|top-left|bottom-left|")
-		}
-		if strings.Contains("|top|top-right|top-left|", directionStr) {
-			row++
-			// fmt.Println(directionStr + " Matched |top|top-right|top-left|")
-		}
-		if strings.Contains("|bottom|bottom-left|bottom-right|", directionStr) {
-			row--
-			// fmt.Println(directionStr + " Matched |bottom|bottom-right|bottom-left|")
-		}
-
-		// Index in [][]blocks is -1 with row, col property
-		if row > 6 || row < 1 || col > 7 || col < 1 || blocks[row-1][col-1].capturedBy != block.capturedBy {
-			return block
-		}
-
-		// Index in [][]blocks is -1 with row, col property
-		block = blocks[row-1][col-1]
-	}
+	return false, from, to
 }

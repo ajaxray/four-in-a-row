@@ -1,11 +1,11 @@
 package main
 
 import (
+	"image/color"
 	"strconv"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
-	"golang.org/x/image/colornames"
 )
 
 type gameState int
@@ -25,8 +25,9 @@ func (s Scene) show(t pixel.Target) {
 }
 
 type Player struct {
-	name string
-	pawn *pixel.Sprite
+	name  string
+	color color.RGBA
+	pawn  *pixel.Sprite
 }
 
 type Block struct {
@@ -36,8 +37,6 @@ type Block struct {
 
 func (b Block) print(s Scene) {
 	padding := 2 // will be doubled for cell-cell gaps
-	s.canvas.Color = colornames.Coral
-	s.canvas.EndShape = imdraw.RoundEndShape
 	s.canvas.Push(
 		pixel.V(float64(b.col*100-padding), float64(b.row*100-padding)),         // Top-Right
 		pixel.V(float64((b.col-1)*100+padding), float64((b.row-1)*100+padding)), // Bottom-Left
@@ -52,4 +51,10 @@ func (b Block) Center() pixel.Vec {
 
 func (b Block) String() string {
 	return strconv.Itoa(b.row) + "x" + strconv.Itoa(b.col)
+}
+
+// blockByRowCol finds the block in blocks
+// Index in [][]blocks is -1 with row, col property
+func blockByRowCol(row, col int) Block {
+	return blocks[row-1][col-1]
 }
