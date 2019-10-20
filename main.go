@@ -5,6 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/speaker"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
@@ -28,6 +31,7 @@ var winTitle = "Four-In-A-Row!"
 var heading, subheading string
 var basicAtlas = text.NewAtlas(basicfont.Face7x13, text.ASCII)
 
+var tickSound, coinSound beep.StreamSeeker
 var blockM = pixel.IM.Scaled(pixel.ZV, .8)
 
 func run() {
@@ -115,6 +119,11 @@ func initGame() {
 	buttonFrames := makeSpriteMap(pawnSheet, 100, 100)
 	player1 = Player{"Player 1", colornames.Whitesmoke, pixel.NewSprite(pawnSheet, buttonFrames[0])}
 	player2 = Player{"Player 2", colornames.Darkorchid, pixel.NewSprite(pawnSheet, buttonFrames[1])}
+
+	var format beep.Format
+	format, tickSound = loadMP3Sound("assets/tick.mp3")
+	format, coinSound = loadMP3Sound("assets/coin.mp3")
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 }
 
 func restartGame(s Scene) {
@@ -159,6 +168,9 @@ func playMove(dropCol int, win pixel.Target) {
 
 func dropComplete() {
 	droppingPawn.Draw(objects, blockM.Moved(dropTarget.Center()))
+	speaker.Play(tickSound)
+	tickSound.Seek(0)
+
 	dropTarget.capturedBy = turnOf
 	state = waitingToDrop
 }
@@ -206,6 +218,8 @@ func declareWin(s Scene, from, to Block) {
 	s.canvas.Push(from.Center(), to.Center())
 	s.canvas.Line(5)
 	state = checkMate
+	speaker.Play(coinSound)
+	coinSound.Seek(0)
 
 	heading = turnOf.name + " Wins!"
 	subheading = "Press <SPACE> to start over"

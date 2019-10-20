@@ -4,6 +4,8 @@ import (
 	"image"
 	"os"
 
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
 	"github.com/faiface/pixel"
 )
 
@@ -31,6 +33,26 @@ func loadPicture(path string) (pixel.Picture, error) {
 		return nil, err
 	}
 	return pixel.PictureDataFromImage(img), nil
+}
+
+// Load the sound in buffer and returns the SoundSeeker and format
+// How to use:
+// format, coinSound = loadMP3Sound("assets/coin.mp3")
+// speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+// speaker.Play(tickSound)
+// tickSound.Seek(0)
+func loadMP3Sound(filePath string) (beep.Format, beep.StreamSeeker) {
+	f, err := os.Open(filePath)
+	panicIfError(err)
+
+	streamer, format, err := mp3.Decode(f)
+	panicIfError(err)
+
+	buffer := beep.NewBuffer(format)
+	buffer.Append(streamer)
+	streamer.Close()
+
+	return format, buffer.Streamer(0, buffer.Len())
 }
 
 func panicIfError(err error) {
