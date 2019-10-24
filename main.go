@@ -32,7 +32,9 @@ var heading, subheading string
 var basicAtlas = text.NewAtlas(basicfont.Face7x13, text.ASCII)
 
 var tickSound, coinSound beep.StreamSeeker
-var blockM = pixel.IM.Scaled(pixel.ZV, .8)
+
+//var blockM = pixel.IM.Scaled(pixel.ZV, .8)
+var blockM = pixel.IM
 
 func run() {
 	cfg := pixelgl.WindowConfig{
@@ -110,15 +112,15 @@ func makeGameScene() Scene {
 }
 
 func initGame() {
-	pawnSheet, err := loadPicture("assets/buttons_tb.png")
+	pawnSheet, err := loadPicture("assets/buttons_80.png")
 	panicIfError(err)
 	objects = pixel.NewBatch(&pixel.TrianglesData{}, pawnSheet)
 
 	//sprite := pixel.NewSprite(pic, pic.Bounds())
 	//button2 := pixel.NewSprite(pic, pixel.R(0, 127, 100, 227))
-	buttonFrames := makeSpriteMap(pawnSheet, 100, 100)
+	buttonFrames := makeSpriteMap(pawnSheet, 80, 80)
 	player1 = Player{"Player 1", colornames.Whitesmoke, pixel.NewSprite(pawnSheet, buttonFrames[0])}
-	player2 = Player{"Player 2", colornames.Darkorchid, pixel.NewSprite(pawnSheet, buttonFrames[1])}
+	player2 = Player{"Player 2", colornames.Whitesmoke, pixel.NewSprite(pawnSheet, buttonFrames[2])}
 
 	var format beep.Format
 	format, tickSound = loadMP3Sound("assets/tick.mp3")
