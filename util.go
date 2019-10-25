@@ -2,7 +2,11 @@ package main
 
 import (
 	"image"
+	"net/http"
 	"os"
+
+	_ "image/jpeg"
+	_ "image/png"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
@@ -29,6 +33,20 @@ func loadPicture(path string) (pixel.Picture, error) {
 	}
 	defer file.Close()
 	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+	return pixel.PictureDataFromImage(img), nil
+}
+
+// loadPicture Loads picture data from path
+func loadPictureURL(url string) (pixel.Picture, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	img, _, err := image.Decode(resp.Body)
 	if err != nil {
 		return nil, err
 	}

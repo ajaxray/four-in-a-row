@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -27,6 +28,9 @@ var pawnSheet pixel.Picture
 var objects *pixel.Batch
 var win *pixelgl.Window
 
+var onlineBackgrounds []string
+var background *pixel.Sprite
+
 var winTitle = "Four-In-A-Row!"
 var heading, subheading string
 var basicAtlas = text.NewAtlas(basicfont.Face7x13, text.ASCII)
@@ -45,7 +49,7 @@ func run() {
 	win, _ = pixelgl.NewWindow(cfg)
 
 	initGame()
-	background := makeBackground()
+	background = makeBackground()
 	currentScene := makeGameScene()
 	turnOf = &player1
 
@@ -120,7 +124,7 @@ func initGame() {
 	//button2 := pixel.NewSprite(pic, pixel.R(0, 127, 100, 227))
 	buttonFrames := makeSpriteMap(pawnSheet, 80, 80)
 	player1 = Player{"Player 1", colornames.Whitesmoke, pixel.NewSprite(pawnSheet, buttonFrames[0])}
-	player2 = Player{"Player 2", colornames.Whitesmoke, pixel.NewSprite(pawnSheet, buttonFrames[2])}
+	player2 = Player{"Player 2", colornames.Whitesmoke, pixel.NewSprite(pawnSheet, buttonFrames[1])}
 
 	var format beep.Format
 	format, tickSound = loadMP3Sound("assets/tick.mp3")
@@ -133,6 +137,7 @@ func restartGame(s Scene) {
 	s.canvas.Clear()
 	heading = ""
 	subheading = ""
+	background = makeBackground()
 
 	s.canvas.Color = pixel.ToRGBA(colornames.Coral).Mul(pixel.Alpha(.5))
 	for row := 0; row < 6; row++ {
@@ -178,7 +183,28 @@ func dropComplete() {
 }
 
 func makeBackground() *pixel.Sprite {
-	back, err := loadPicture("assets/back_1.png")
+	var back pixel.Picture
+	var err error
+
+	// Try online backgrounds first
+	if len(onlineBackgrounds) == 0 {
+		onlineBackgrounds, err = loadCollectionPhotos(8823531, "regular")
+	}
+	//fmt.Printf("%+v \n", onlineBackgrounds)
+	if err == nil && len(onlineBackgrounds) > 0 {
+		rand.Seed(time.Now().UnixNano())
+		selectedBack := onlineBackgrounds[rand.Intn(len(onlineBackgrounds))]
+
+		if err == nil {
+			if back, err = loadPictureURL(selectedBack); err == nil {
+				return pixel.NewSprite(back, back.Bounds())
+			}
+		}
+		fmt.Printf("Error: %s \n", err)
+	}
+
+	// Load fallback local background
+	back, err = loadPicture("assets/back_1.png")
 	panicIfError(err)
 	return pixel.NewSprite(back, back.Bounds())
 }
