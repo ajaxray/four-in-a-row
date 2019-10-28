@@ -6,22 +6,27 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 type gameState int
 
 const (
-	waitingToDrop gameState = iota
+	intro gameState = iota
+	waitingToDrop
 	pawnDropped
+	paused
 	checkMate
 )
 
 type Scene struct {
-	canvas *imdraw.IMDraw
+	canvas  *imdraw.IMDraw
+	textPad *pixelgl.Canvas
 }
 
 func (s Scene) show(t pixel.Target) {
 	s.canvas.Draw(t)
+	s.textPad.Draw(t, pixel.IM.Moved(win.Bounds().Center()))
 }
 
 type Player struct {

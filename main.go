@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"time"
 
@@ -28,13 +27,11 @@ var pawnSheet pixel.Picture
 var objects *pixel.Batch
 var win *pixelgl.Window
 
-var onlineBackgrounds []string
 var background *pixel.Sprite
 
 var winTitle = "Four-In-A-Row!"
 var heading, subheading string
 var basicAtlas = text.NewAtlas(basicfont.Face7x13, text.ASCII)
-
 var tickSound, coinSound beep.StreamSeeker
 
 //var blockM = pixel.IM.Scaled(pixel.ZV, .8)
@@ -49,8 +46,9 @@ func run() {
 	win, _ = pixelgl.NewWindow(cfg)
 
 	initGame()
-	background = makeBackground()
-	currentScene := makeGameScene()
+	background = defaultBackground()
+	pauseModal := makeIntroScene()
+	currentScene := pauseModal
 	turnOf = &player1
 
 	for !win.Closed() {
@@ -82,7 +80,8 @@ func run() {
 			}
 		}
 
-		if win.JustPressed(pixelgl.MouseButtonLeft) && state == waitingToDrop {
+		switch {
+		case win.JustPressed(pixelgl.MouseButtonLeft) && state == waitingToDrop:
 			dropCol := getDroppingCol(mouseX)
 			dropTarget = findGropTarget(dropCol)
 
@@ -91,18 +90,37 @@ func run() {
 			} else {
 				alert("No block is left in this column!")
 			}
-		} else if win.JustPressed(pixelgl.KeySpace) && state == checkMate {
+		case win.JustPressed(pixelgl.KeySpace) && state == intro:
+			currentScene = makeGameScene()
+			state = waitingToDrop
+		case win.JustPressed(pixelgl.KeySpace) && state == waitingToDrop:
+			state = paused
+		case win.JustPressed(pixelgl.KeyQ) && (state == paused || state == intro):
+			win.SetClosed(true)
+		case win.JustPressed(pixelgl.KeyB) && state == paused:
+			tryOnlineBackground()
+			state = waitingToDrop
+		case win.JustPressed(pixelgl.KeyR) && state == paused:
+			restartGame(currentScene)
+		case win.JustPressed(pixelgl.KeySpace) && state == paused:
+			state = waitingToDrop
+		case win.JustPressed(pixelgl.KeySpace) && state == checkMate:
 			restartGame(currentScene)
 		}
 
-		printTitles()
+		if state == paused {
+			pauseModal.show(win)
+		} else {
+			printTitles()
+		}
+
 		win.Update()
 	}
 }
 
 func makeGameScene() Scene {
 
-	stage := Scene{imdraw.New(nil)}
+	stage := Scene{imdraw.New(nil), pixelgl.NewCanvas(win.Bounds())}
 	stage.canvas.Color = pixel.ToRGBA(colornames.Coral).Mul(pixel.Alpha(.5))
 	for row := 0; row < 6; row++ {
 		for col := 0; col < 7; col++ {
@@ -111,6 +129,42 @@ func makeGameScene() Scene {
 			blocks[row][col].print(stage)
 		}
 	}
+	tryOnlineBackground()
+
+	return stage
+}
+
+func makeIntroScene() Scene {
+	discs := player1.pawn.Picture()
+	stage := Scene{imdraw.New(discs), pixelgl.NewCanvas(win.Bounds())}
+
+	stage.canvas.Color = pixel.ToRGBA(colornames.Black).Mul(pixel.Alpha(.75))
+	stage.canvas.Push(
+		pixel.V(620, 80), // Top-Right
+		pixel.V(80, 620), // Bottom-Left
+	)
+
+	stage.canvas.Rectangle(0)
+
+	title := text.New(pixel.V(100, 550), basicAtlas)
+	fmt.Fprintln(title, "Four-In-A-Row")
+	title.Draw(stage.textPad, pixel.IM.Scaled(title.Orig, 4))
+
+	desc := text.New(pixel.V(100, 500), basicAtlas)
+	fmt.Fprintln(desc, "The first one to form a horizontal,\nvertical, or diagonal line of four\nof one's own discs will win.")
+
+	fmt.Fprintln(desc, "\n-----------------------------")
+	fmt.Fprintln(desc, "<Space> : Start/Pause/Resume")
+	fmt.Fprintln(desc, "\n---------(Paused)------------")
+	fmt.Fprintln(desc, "<R>     : Restart")
+	fmt.Fprintln(desc, "<B>     : Change Background (online)")
+	fmt.Fprintln(desc, "<Q>     : Quit")
+	fmt.Fprintln(desc, " ")
+	fmt.Fprintln(desc, "    Player1           Player2")
+	desc.Draw(stage.textPad, pixel.IM.Scaled(desc.Orig, 2))
+
+	player1.pawn.Draw(stage.canvas, blockM.Moved(pixel.V(200, 130)))
+	player2.pawn.Draw(stage.canvas, blockM.Moved(pixel.V(450, 130)))
 
 	return stage
 }
@@ -137,7 +191,7 @@ func restartGame(s Scene) {
 	s.canvas.Clear()
 	heading = ""
 	subheading = ""
-	background = makeBackground()
+	tryOnlineBackground()
 
 	s.canvas.Color = pixel.ToRGBA(colornames.Coral).Mul(pixel.Alpha(.5))
 	for row := 0; row < 6; row++ {
@@ -182,29 +236,8 @@ func dropComplete() {
 	state = waitingToDrop
 }
 
-func makeBackground() *pixel.Sprite {
-	var back pixel.Picture
-	var err error
-
-	// Try online backgrounds first
-	if len(onlineBackgrounds) == 0 {
-		onlineBackgrounds, err = loadCollectionPhotos(8823531, "regular")
-	}
-	//fmt.Printf("%+v \n", onlineBackgrounds)
-	if err == nil && len(onlineBackgrounds) > 0 {
-		rand.Seed(time.Now().UnixNano())
-		selectedBack := onlineBackgrounds[rand.Intn(len(onlineBackgrounds))]
-
-		if err == nil {
-			if back, err = loadPictureURL(selectedBack); err == nil {
-				return pixel.NewSprite(back, back.Bounds())
-			}
-		}
-		fmt.Printf("Error: %s \n", err)
-	}
-
-	// Load fallback local background
-	back, err = loadPicture("assets/back_1.png")
+func defaultBackground() *pixel.Sprite {
+	back, err := loadPicture("assets/back_1.png")
 	panicIfError(err)
 	return pixel.NewSprite(back, back.Bounds())
 }
@@ -251,6 +284,14 @@ func declareWin(s Scene, from, to Block) {
 
 	heading = turnOf.name + " Wins!"
 	subheading = "Press <SPACE> to start over"
+}
+
+func tryOnlineBackground() {
+	go func() {
+		if onlineBackground := loadUnsplashBackground(); onlineBackground != nil {
+			background = onlineBackground
+		}
+	}()
 }
 
 func alert(message string) {
