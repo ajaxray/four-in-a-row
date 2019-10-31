@@ -95,7 +95,7 @@ func run() {
 			state = waitingToDrop
 		case win.JustPressed(pixelgl.KeySpace) && state == waitingToDrop:
 			state = paused
-		case win.JustPressed(pixelgl.KeyQ) && (state == paused || state == intro):
+		case win.JustPressed(pixelgl.KeyQ) && (state == paused || state == intro || state == checkMate):
 			win.SetClosed(true)
 		case win.JustPressed(pixelgl.KeyB) && state == paused:
 			tryOnlineBackground()
@@ -283,7 +283,7 @@ func declareWin(s Scene, from, to Block) {
 	coinSound.Seek(0)
 
 	heading = turnOf.name + " Wins!"
-	subheading = "Press <SPACE> to start over"
+	subheading = "Press <SPACE> to start, <Q> to quit."
 }
 
 func tryOnlineBackground() {
@@ -305,44 +305,57 @@ func main() {
 }
 
 //  ------------- CHeck Matching --------------
+func getLastBlock(block Block, direction string) Block {
+
+	directionStr := "|" + direction + "|"
+	for {
+		row, col := block.row, block.col
+
+		if strings.Contains("|right|top-right|bottom-right|", directionStr) {
+			col++
+		}
+		if strings.Contains("|left|top-left|bottom-left|", directionStr) {
+			col--
+		}
+		if strings.Contains("|top|top-right|top-left|", directionStr) {
+			row++
+		}
+		if strings.Contains("|bottom|bottom-left|bottom-right|", directionStr) {
+			row--
+		}
+
+		if row > 6 || row < 1 || col > 7 || col < 1 || blockByRowCol(row, col).capturedBy != block.capturedBy {
+			return block
+		}
+
+		block = blockByRowCol(row, col)
+	}
+}
+
 func checkMatching(block Block) (bool, Block, Block) {
 	from, to := Block{}, Block{}
 
-	var getLastBlock = func(block Block, direction string) Block {
-
-		directionStr := "|" + direction + "|"
-		for {
-			row, col := block.row, block.col
-
-			if strings.Contains("|right|top-right|bottom-right|", directionStr) {
-				col++
-			}
-			if strings.Contains("|left|top-left|bottom-left|", directionStr) {
-				col--
-			}
-			if strings.Contains("|top|top-right|top-left|", directionStr) {
-				row++
-			}
-			if strings.Contains("|bottom|bottom-left|bottom-right|", directionStr) {
-				row--
-			}
-
-			if row > 6 || row < 1 || col > 7 || col < 1 || blockByRowCol(row, col).capturedBy != block.capturedBy {
-				// Keep note of last 2 results by this closure
-				// Also, remember to call this 2 times (from-to) for every checking
-				from, to = to, block
-				return block
-			}
-
-			block = blockByRowCol(row, col)
-		}
+	from = getLastBlock(block, "right")
+	to = getLastBlock(block, "left")
+	if from.col-to.col >= 3 {
+		return true, from, to
 	}
 
-	switch {
-	case getLastBlock(block, "right").col-getLastBlock(block, "left").col >= 3,
-		getLastBlock(block, "top").row-getLastBlock(block, "bottom").row >= 3,
-		getLastBlock(block, "top-right").col-getLastBlock(block, "bottom-left").col >= 3,
-		getLastBlock(block, "bottom-right").col-getLastBlock(block, "top-left").col >= 3:
+	from = getLastBlock(block, "top")
+	to = getLastBlock(block, "bottom")
+	if from.row-to.row >= 3 {
+		return true, from, to
+	}
+
+	from = getLastBlock(block, "top-right")
+	to = getLastBlock(block, "bottom-left")
+	if from.col-to.col >= 3 {
+		return true, from, to
+	}
+
+	from = getLastBlock(block, "bottom-right")
+	to = getLastBlock(block, "top-left")
+	if from.col-to.col >= 3 {
 		return true, from, to
 	}
 
