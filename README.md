@@ -1,6 +1,7 @@
-Four In A Row
+Four In A Row - 2 Player Arcade Game
 ====================
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ajaxray/four-in-a-row)](https://goreportcard.com/report/github.com/ajaxray/four-in-a-row)
 
 > Connect Four (also known as Captain's Mistress, Four Up, Plot Four, Find Four, Four in a Row, Four in a Line, Drop Four, and Gravitrips (in Soviet Union)) is a two-player connection game in which the players first choose a color and then take turns dropping one colored disc from the top into a seven-column, six-row vertically suspended grid. The pieces fall straight down, occupying the lowest available space within the column. The objective of the game is to be the first to form a horizontal, vertical, or diagonal line of four of one's own discs.
 > 
@@ -10,14 +11,14 @@ Four In A Row
 
 How to play?
 ----------------------
-- Point the cursor over the row you wish to drop your piece in
-- Left click to drop your piece
-- When you can connect four pieces vertically, horizontally or diagonally you win
+- Point the cursor over the column you wish to drop your disc in
+- Left click to drop your disc
+- When you can connect four discs vertically, horizontally or diagonally you win
 
 Features Implemented/Pending
 --------------------
 - [x] Basic **Four In A Row** / **Connect Four** game
-- [x] Colorful, glossy dies
+- [x] Colorful, glossy disc images
 - [x] Dice dropping and win sound
 - [x] Intro screen with instructions
 - [x] Pause screen
@@ -49,7 +50,7 @@ We have a puzzle toy board of Four-In-A-Row and my kids enjoy it very much! One 
 
 Then, I have searched around for an easy 2D game engine in [Golang] and chosen [Pixel]. Pixel, with it's easy to follow wiki, made it fun to bring this game in existence within a very short time.
 
-
+---
 > O mankind, what has deceived you concerning your Lord, the Generous!  
 > -- [Al-Quran 42:6](https://quran.com/82/6?translations=20)
 

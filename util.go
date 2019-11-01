@@ -2,7 +2,6 @@ package main
 
 import (
 	"image"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -84,11 +83,10 @@ func getEnvStr(key, defaultVal string) string {
 }
 func getEnvInt(key string, defaultVal int) int {
 	if v, ok := os.LookupEnv(key); ok {
-		if i, err := strconv.Atoi(v); err == nil {
-			return i
-		} else {
-			log.Fatal(err)
-		}
+		i, err := strconv.Atoi(v)
+		panicIfError(err)
+
+		return i
 	}
 
 	return defaultVal

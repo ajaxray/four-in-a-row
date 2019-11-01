@@ -25,7 +25,7 @@ var objects *pixel.Batch
 var win *pixelgl.Window
 
 var background *pixel.Sprite
-var dice, droppingDice *pixel.Sprite
+var disc, droppingDisc *pixel.Sprite
 
 var winTitle = "Four-In-A-Row!"
 var heading, subheading string
@@ -61,12 +61,12 @@ func run() {
 
 		switch state {
 		case waitingToDrop:
-			turnOf.dice.Draw(win, blockM.Moved(pixel.V(mouseX, 650)))
+			turnOf.disc.Draw(win, blockM.Moved(pixel.V(mouseX, 650)))
 			subheading = turnOf.name + "'s move..."
 		case pawnDropped:
 			droppingV.Y -= 20
 			if droppingV.Y <= dropTarget.Center().Y {
-				// Reached target cell. draw permenently
+				// Reached target cell. draw permanently on game scene
 				dropComplete()
 				matched, from, to := checkMatching(*dropTarget)
 				if matched {
@@ -75,7 +75,7 @@ func run() {
 					turnOf = rotateTurn()
 				}
 			} else {
-				droppingDice.Draw(win, blockM.Moved(droppingV))
+				droppingDisc.Draw(win, blockM.Moved(droppingV))
 			}
 		}
 
@@ -118,15 +118,15 @@ func run() {
 }
 
 func initGame() {
-	diceSheet, err := loadPicture("assets/buttons_80.png")
+	discSheet, err := loadPicture("assets/buttons_80.png")
 	panicIfError(err)
-	objects = pixel.NewBatch(&pixel.TrianglesData{}, diceSheet)
+	objects = pixel.NewBatch(&pixel.TrianglesData{}, discSheet)
 
 	//sprite := pixel.NewSprite(pic, pic.Bounds())
 	//button2 := pixel.NewSprite(pic, pixel.R(0, 127, 100, 227))
-	buttonFrames := makeSpriteMap(diceSheet, 80, 80)
-	player1 = Player{"Player 1", colornames.Whitesmoke, pixel.NewSprite(diceSheet, buttonFrames[0])}
-	player2 = Player{"Player 2", colornames.Whitesmoke, pixel.NewSprite(diceSheet, buttonFrames[1])}
+	buttonFrames := makeSpriteMap(discSheet, 80, 80)
+	player1 = Player{"Player 1", colornames.Whitesmoke, pixel.NewSprite(discSheet, buttonFrames[0])}
+	player2 = Player{"Player 2", colornames.Whitesmoke, pixel.NewSprite(discSheet, buttonFrames[1])}
 
 	var format beep.Format
 	format, tickSound = loadMP3Sound("assets/tick.mp3")

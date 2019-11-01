@@ -25,6 +25,7 @@ const (
 	checkMate
 )
 
+// Scene is a collection off-screen targets that presents a game scene
 type Scene struct {
 	canvas  *imdraw.IMDraw
 	textPad *pixelgl.Canvas
@@ -35,12 +36,14 @@ func (s Scene) show(t pixel.Target) {
 	s.textPad.Draw(t, pixel.IM.Moved(win.Bounds().Center()))
 }
 
+// Player represent each participents of game
 type Player struct {
 	name  string
 	color color.RGBA
-	dice  *pixel.Sprite
+	disc  *pixel.Sprite
 }
 
+// Block is a cell of game board that can hold a disc
 type Block struct {
 	row, col   int
 	capturedBy *Player
@@ -56,6 +59,7 @@ func (b Block) print(s Scene) {
 	s.canvas.Rectangle(1)
 }
 
+// Center finds the center point (Vector) of a Block
 func (b Block) Center() pixel.Vec {
 	return pixel.V(float64(b.col*100-50), float64(b.row*100-50))
 }
@@ -88,7 +92,7 @@ func makeGameScene() Scene {
 }
 
 func makeIntroScene() Scene {
-	discs := player1.dice.Picture()
+	discs := player1.disc.Picture()
 	stage := Scene{imdraw.New(discs), pixelgl.NewCanvas(win.Bounds())}
 
 	stage.canvas.Color = pixel.ToRGBA(colornames.Black).Mul(pixel.Alpha(.75))
@@ -116,8 +120,8 @@ func makeIntroScene() Scene {
 	fmt.Fprintln(desc, "    Player1           Player2")
 	desc.Draw(stage.textPad, pixel.IM.Scaled(desc.Orig, 2))
 
-	player1.dice.Draw(stage.canvas, blockM.Moved(pixel.V(200, 130)))
-	player2.dice.Draw(stage.canvas, blockM.Moved(pixel.V(450, 130)))
+	player1.disc.Draw(stage.canvas, blockM.Moved(pixel.V(200, 130)))
+	player2.disc.Draw(stage.canvas, blockM.Moved(pixel.V(450, 130)))
 
 	return stage
 }
@@ -145,17 +149,17 @@ func restartGame(s Scene) {
 	state = waitingToDrop
 }
 
-// Drop the dice in appropriate column
+// Drop the disc in appropriate column
 func playMove(dropCol int, win pixel.Target) {
 	state = pawnDropped
-	droppingDice = turnOf.dice
+	droppingDisc = turnOf.disc
 	droppingV = blocks[5][dropCol].Center()
-	droppingDice.Draw(win, blockM.Moved(droppingV))
+	droppingDisc.Draw(win, blockM.Moved(droppingV))
 }
 
-// Dice reached to it's target block
+// Disc reached to it's target block
 func dropComplete() {
-	droppingDice.Draw(objects, blockM.Moved(dropTarget.Center()))
+	droppingDisc.Draw(objects, blockM.Moved(dropTarget.Center()))
 	speaker.Play(tickSound)
 	tickSound.Seek(0)
 
