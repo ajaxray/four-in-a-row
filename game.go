@@ -36,7 +36,7 @@ func (s Scene) show(t pixel.Target) {
 	s.textPad.Draw(t, pixel.IM.Moved(win.Bounds().Center()))
 }
 
-// Player represent each participents of game
+// Player represent each participants of game
 type Player struct {
 	name  string
 	color color.RGBA
