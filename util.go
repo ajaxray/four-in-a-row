@@ -2,8 +2,10 @@ package main
 
 import (
 	"image"
+	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	_ "image/jpeg"
 	_ "image/png"
@@ -71,6 +73,25 @@ func loadMP3Sound(filePath string) (beep.Format, beep.StreamSeeker) {
 	streamer.Close()
 
 	return format, buffer.Streamer(0, buffer.Len())
+}
+
+func getEnvStr(key, defaultVal string) string {
+	if v, ok := os.LookupEnv(key); ok {
+		return v
+	}
+
+	return defaultVal
+}
+func getEnvInt(key string, defaultVal int) int {
+	if v, ok := os.LookupEnv(key); ok {
+		if i, err := strconv.Atoi(v); err == nil {
+			return i
+		} else {
+			log.Fatal(err)
+		}
+	}
+
+	return defaultVal
 }
 
 func panicIfError(err error) {
