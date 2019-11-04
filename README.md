@@ -15,6 +15,9 @@ How to play?
 - Left click to drop your disc
 - When you can connect four discs vertically, horizontally or diagonally you win
 
+Download the [MacOS version].  
+(You have to compile yourself if you're on other OS, sorry!)
+
 Features Implemented/Pending
 --------------------
 - [x] Basic **Four In A Row** / **Connect Four** game
@@ -40,6 +43,15 @@ To fix any bug, improve or just to explore -
     - Create a *collection* to group up your curated photos. 
     - Set the collection ID as `UNSPLASH_COLLECTION_ID` in `.env` file
 
+#### Cross Compiling
+
+If you want to build for windows 64-bit from macOS, use the following options.
+```
+env GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go build -ldflags="-H windowsgui" -o four-in-a-row.exe
+```
+Also, you may need to check [this workaround].
+
+
 Suggestions and [Pull Requests] are welcome!
 
 Motivation
@@ -59,3 +71,5 @@ Then, I have searched around for an easy 2D game engine in [Golang] and chosen [
 [Pull Requests]: https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests
 [Golang]: https://golang.org/
 [Pixel]: https://github.com/faiface/pixel
+[this workaround]: https://github.com/faiface/pixel/issues/53#issuecomment-360238189
+[MacOS version]: https://www.dropbox.com/s/4h1bj6wbvbiru12/Four-In-A-Row.zip?dl=0
