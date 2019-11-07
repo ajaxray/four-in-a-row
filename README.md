@@ -15,8 +15,11 @@ How to play?
 - Left click to drop your disc
 - When you can connect four discs vertically, horizontally or diagonally you win
 
-Download the [MacOS version].  
-(You have to compile yourself if you're on other OS, sorry!)
+#### Download 
+- [MacOS version]
+- [Windows] (64-bit)
+
+You have to compile yourself if you're on other OS, sorry!
 
 Features Implemented/Pending
 --------------------
@@ -72,4 +75,5 @@ Then, I have searched around for an easy 2D game engine in [Golang] and chosen [
 [Golang]: https://golang.org/
 [Pixel]: https://github.com/faiface/pixel
 [this workaround]: https://github.com/faiface/pixel/issues/53#issuecomment-360238189
-[MacOS version]: https://www.dropbox.com/s/4h1bj6wbvbiru12/Four-In-A-Row.zip?dl=0
+[MacOS version]: https://www.dropbox.com/s/4h1bj6wbvbiru12/Four-In-A-Row_macOS.zip?dl=1
+[Windows]: https://www.dropbox.com/s/p032xkv8v5sn9sk/Four-In-A-Row__win64bit.zip?dl=1
