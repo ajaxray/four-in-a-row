@@ -46,7 +46,12 @@ To fix any bug, improve or just to explore -
     - Create a *collection* to group up your curated photos. 
     - Set the collection ID as `UNSPLASH_COLLECTION_ID` in `.env` file
 
-#### Cross Compiling
+#### Compiling
+
+Use additional flags if you are in MacOS Catalina (10.15.x)  
+```
+go build -ldflags "-w"
+```
 
 If you want to build for windows 64-bit from macOS, use the following options.
 ```
@@ -75,5 +80,5 @@ Then, I have searched around for an easy 2D game engine in [Golang] and chosen [
 [Golang]: https://golang.org/
 [Pixel]: https://github.com/faiface/pixel
 [this workaround]: https://github.com/faiface/pixel/issues/53#issuecomment-360238189
-[MacOS version]: https://www.dropbox.com/s/4h1bj6wbvbiru12/Four-In-A-Row_macOS.zip?dl=1
-[Windows]: https://www.dropbox.com/s/p032xkv8v5sn9sk/Four-In-A-Row__win64bit.zip?dl=1
+[MacOS version]: https://github.com/ajaxray/four-in-a-row/releases/download/v1.0.0/Four-In-A-Row_macOS.zip
+[Windows]: https://github.com/ajaxray/four-in-a-row/releases/download/v1.0.0/Four-In-A-Row__win64bit.zip
